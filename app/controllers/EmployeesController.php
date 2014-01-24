@@ -12,6 +12,14 @@ class EmployeesController extends Controller {
 		return View::make('dashboard');
 	}
 
+	//FUNCTION TEST   ANGULAR
+
+
+
+
+
+	// END TEST ANGULAR 
+
 	public function get_listEmployees(){
 		// stores the term GET value
         $term = Input::get('search');
@@ -32,6 +40,38 @@ class EmployeesController extends Controller {
         } 
          // Return an array in json format 
         return json_encode($data);
+	}
+
+	public function post_authenticate(){
+
+		# store datas
+		$username = Input::get('search');
+		$password = Input::get('password');
+		$password = sha1($password);
+
+		#search database
+		$employee = DB::table('employees')
+			    ->where('username', '=', $username)
+			    ->where('password', '=', $password)
+			    ->first();
+
+		if (empty($employee)) {
+			return 'Username or Pasword Incorrect';
+		}else{
+				#validate session work
+				$validateSession = DB::table('employeesattendance')
+								->where('employeeId', '=', $employee->id)
+								->where('hoursWorked', '=', '0.00')
+								->first();
+ 
+				if (empty($validateSession)) {
+					return '1
+					';//START WORK
+				}else{
+					return '2';//STOP WORK
+				}//END ELSE
+
+		}//END ELSE
 	}
 
 	public function post_SaveStartWork()
