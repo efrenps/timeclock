@@ -12,171 +12,190 @@ class EmployeesController extends Controller {
 		return View::make('dashboard');
 	}
 
-	//FUNCTION TEST   ANGULAR
-
-
-
-
-
-	// END TEST ANGULAR 
-
 	public function get_listEmployees(){
-		// stores the term GET value
-        $term = Input::get('search');
+        // stores the term GET value
+        $term = Input::get('term');
         $term = $term.'%';
         $data = array();
-        
+
         // Stores the resultset data from the employees tables into the $search variable
         $search =  DB::table('employees')
-			    ->where('username', 'like', $term)
-			    ->get();
+                            ->where('firstname', 'like', $term)
+                            ->orWhere('lastname', 'like', $term)
+                            ->orWhere('username', 'like', $term)
+                            ->get();
 
-		 /* Iterate through the query result and stores the
+        /* Iterate through the query result and stores the
         *  first_name concatenates with last_name columns and
         *  store the value into the data array
         */
         foreach ($search as $result => $employeeInfo) {
-        	$data[] = $employeeInfo->username;
-        } 
-         // Return an array in json format 
+             // $data[] = $employeeInfo->username;
+                $data[] = array('id' => $employeeInfo->id,
+                                'value' => $employeeInfo->firstname . ' '. $employeeInfo->lastname,
+                                'description' => $employeeInfo->firstname . ' '. $employeeInfo->lastname);
+        }
+         // Return an array in json format
         return json_encode($data);
-	}
+    }
 
-	public function post_authenticate(){
+    public function get_employeeActions(){
+        // stores the term GET value
+        $name = Input::get('name');
+        //$name = $name.'%';
+        $data = array();
 
-		# store datas
-		$username = Input::get('search');
-		$password = Input::get('password');
-		$password = sha1($password);
+        if ($name != null | $name != '') {
+            $tsql = DB::table('employees')
+                         ->leftJoin('employeesAttendance', 'employees.id', '=', 'employeesAttendance.employeeId')
+                         ->where('employees.firstname', 'like', $name.'%')
+                         ->orderBy('employeesAttendance.id', 'desc')
+                         ->get();
+        } else {
+            $tsql = DB::table('employees')
+                         ->leftJoin('employeesAttendance', 'employees.id', '=', 'employeesAttendance.employeeId')
+                         ->orderBy('employeesAttendance.id', 'desc')
+                         ->get();
+        }
 
-		#search database
-		$employee = DB::table('employees')
-			    ->where('username', '=', $username)
-			    ->where('password', '=', $password)
-			    ->first();
+        $table = "<table>
+                  <tr>
+                    <td>Photo</td>
+                    <td>First Name</td>
+                    <td>Last name</td>
+                    <td>Time</td>
+                    <td>Action</td>
+                    <td>Reason</td>
+                  <tr/>";
 
-		if (empty($employee)) {
-			return 'Username or Pasword Incorrect';
-		}else{
-				#validate session work
-				$validateSession = DB::table('employeesattendance')
-								->where('employeeId', '=', $employee->id)
-								->where('hoursWorked', '=', '0.00')
-								->first();
- 
-				if (empty($validateSession)) {
-					return '1
-					';//START WORK
-				}else{
-					return '2';//STOP WORK
-				}//END ELSE
+                if ( !empty($tsql) ) {
+                  foreach ($tsql as $result => $employeeInfo) {
+                      $table .= "<tr>"; 
+                      $table .= "<td>" . '<img src="images/employee.png" />'. "</td>"; 
+                      $table .= "<td>" . $employeeInfo->firstname . "</td>"; 
+                      $table .= "<td>" . $employeeInfo->lastname . "</td>";
+                      // $table .= "<td>" . date_format($employeeInfo->timeIn, 'd/m/Y H:i:s'). "</td>"; 
+                      if ($employeeInfo->hoursWorked == ""){
+                          $table .= "<td>" . $employeeInfo->timeIn . "</td>";                       
+                          $table .= "<td>" . "Start Work" . "</td>"; 
+                      } else {
+                          $table .= "<td>" . $employeeInfo->timeOut . "</td>";                      
+                          $table .= "<td>" . "Stop Work" . "</td>";
+                      }
+                      $table .= "<td>" . $employeeInfo->reasonLeave . "</td>"; 
+                      $table .= "</tr>"; 
+                  }
+                } 
 
-		}//END ELSE
-	}
+               $table .= "</table>";  
+
+        return $table;
+    }
+
+    public function post_authenticate(){
+        $id = Input::get('userid');
+        $password = Input::get('password');
+        $password = sha1($password);
+        $data = array();
+
+        #search database
+        $employee = DB::table('employees')
+                    ->where('id', '=', $id)
+                    ->where('password', '=', $password)
+                    ->first();
+
+        if (empty($employee)) {
+                $error = 1;//empty employee
+                $data[] = array('error' => $error); 
+
+            return json_encode($data);
+        }
+
+        $employeeAttendance = DB::table('employeesAttendance')
+                            ->where('employeeId', '=', $employee->id)
+                            ->where('hoursWorked', '=', '0.00')
+                            ->first();
+
+        if (empty($employeeAttendance)) {
+            // Employee start work
+            $workStatus = 0;
+        } else {
+            // Employee stop work
+            $workStatus = 1;
+        }
+
+        $error = 0;//empty employee
+        $data[] = array('FirstName' => $employee->firstname, 
+                     'FullName' => $employee->firstname . ' ' . $employee->lastname,
+                     'Action' => $workStatus,
+                     'error' => $error); 
+
+        return json_encode($data);
+
+    }
 
 	public function post_SaveStartWork()
-	{
-		# store datas
-		$username = Input::get('search');
-		$password = Input::get('password');
-		$password = sha1($password);
+    {
+        // data employee attendance
+        $employeeId = Input::get('userid');
+        $action = Input::get('action');
+        $reasonLeave = Input::get('reason');
+        $timeIn = date_create()->format('Y-m-d H:i:s');
+        $data = array();
 
-		#search database
-		$employee = DB::table('employees')
-			    ->where('username', '=', $username)
-			    ->where('password', '=', $password)
-			    ->first();
+        if ($action == 'Start') {
+            #Insert Database
+            $attendanceId = DB::table('employeesAttendance')
+                ->insert(array('employeeId' => $employeeId, 'timeIn' => $timeIn, 'reasonLeave' => $reasonLeave));
+             
+        } else {
+            $employeeAttendance = DB::table('employeesAttendance')
+                                 ->where('employeeId', '=', $employeeId)
+                                 ->where('hoursWorked', '=', '0.00')
+                                 ->first();
 
-		if (empty($employee)) {
-			return 'Username or Pasword Incorrect';
-		}else{
-			
-			#validate session work
-			$validateSession = DB::table('employeesattendance')
-							->where('employeeId', '=', $employee->id)
-							->where('hoursWorked', '=', '0.00')
-							->first();
+            $initial_date = $employeeAttendance->timeIn;
+            $end_date = $timeIn;
 
-			if (empty($validateSession)) {
-				#data employee attendance
-				$employeeId = $employee->id;
-				$timeIn= date_create()->format('Y-m-d H:i:s');
-				#Insert Database
-				$attendanceId = DB::table('employeesattendance')
-								->insert(array('employeeId' => $employeeId, 'timeIn' => $timeIn));
-								return 'Welcome '.$employee->firstname;	
-			}else{
-				return 'Error! please close your session work';
-			}			
-		}
-	}
+            // Split the initial date into pieces
+            list($initial_day, $initial_hour) = explode(" ", $initial_date);
+            list($year, $month, $day) = explode("-", $initial_day);
+            list($hour, $minute, $second) = explode(":", $initial_hour);
+            $initial_time = mktime($hour + 0, $minute + 0, $second + 0, $month + 0, $day + 0, $year);
 
+            // Split the end date into pieces
+            list($end_day, $end_hour) = explode(" ", $end_date);
+            list($year, $month, $day) = explode("-", $end_day);
+            list($hour, $minute, $second) = explode(":", $end_hour);
+            $end_time = mktime($hour + 0, $minute + 0, $second + 0, $month + 0, $day + 0, $year);
 
-	/* SAVE STOP WORK*/
-	    // This function stores the time stops
-	public function post_SaveStopWork()
-	{
-		$username = Input::get('search');
-		$password = Input::get('password');
-		$password = sha1($password);
+            // Make the difference betweeen the SECONDS in the dates
+            $seconds_difference = $end_time - $initial_time;
 
-		#search database
-		$employee = DB::table('employees')
-		->where('username', '=', $username)
-		->where('password', '=', $password)
-		->first();
+            // Calculate total hours worked
+            // Divide ($seconds_difference / 60) / 60
+            $total_hours_worked = ( $seconds_difference / 60 ) / 60;
 
+            // $reason = Input::get('reason');
+            // $employeeId = Input::get('employeeId');
+               $resultUpdateAttendance = DB::table('employeesAttendance')
+                ->where('id', $employeeAttendance->id)
+                ->update( array( 'timeOut' => $timeIn,
+                                 'hoursWorked' => $total_hours_worked,
+                                 'reasonLeave' => $reasonLeave));   
+                   
+        }
 
-		if (empty($employee)) {
-			return 'Wrong Pasword, try again please';
-		} else {
-			#validate session work
-			$validateSession = DB::table('employeesattendance')
-			->where('employeeId', '=', $employee->id)
-			->where('hoursWorked', '=', '0.00')
-			->first();
+        $employeeData = DB::table('employees')
+                        ->where('id','=', $employeeId)
+                        ->first();
 
+        $data[] = array("FullDescription"=>$employeeData->firstname.' ' .$employeeData->lastname,
+                "Action" => $action,
+                "Reason"=>$reasonLeave,
+                "Time"=>$timeIn);
 
-			$timeIn = date_create()->format('Y-m-d H:i:s'); 
-			
-			if (empty($validateSession)) {			    
-				return "You have to register start to work before doing a stop action"; 
-			} else {
-				
-				$initial_date = $validateSession->timeIn;
-				$end_date = $timeIn;
+        return json_encode($data);
+    }
 
-				// Split the initial date into pieces
-				list($initial_day, $initial_hour) = explode(" ", $initial_date);
-				list($year, $month, $day) = explode("-", $initial_day);
-				list($hour, $minute, $second) = explode(":", $initial_hour);
-				$initial_time = mktime($hour + 0, $minute + 0, $second + 0, $month + 0, $day + 0, $year);
-
-				// Split the end date into pieces
-				list($end_day, $end_hour) = explode(" ", $end_date);
-				list($year, $month, $day) = explode("-", $end_day);
-				list($hour, $minute, $second) = explode(":", $end_hour);
-				$end_time = mktime($hour + 0, $minute + 0, $second + 0, $month + 0, $day + 0, $year);
-
-				// Make the difference betweeen the SECONDS in the dates
-				$seconds_difference = $end_time - $initial_time;
-
-                // Calculate total hours worked 
-                // Divide ($seconds_difference / 60) / 60
-				$total_hours_worked = ( $seconds_difference / 60 ) / 60;
-				$reason = Input::get('reason');
-
-				DB::table('employeesattendance')
-				->where('id', $validateSession->id)
-				->update( array( 'timeOut' => $timeIn,
-					'hoursWorked' => $total_hours_worked,
-					'reasonLeave' => $reason));
-
-				return "Time stop registered. Goodbye " . $employee->firstname . ' ' . $employee->lastname;
-			}
-		}
-	}
-	/* SAVE STOP WORKK*/	
-
-
-}
+} // End Employee Class

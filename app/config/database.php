@@ -26,6 +26,7 @@ return array(
 	|
 	*/
 
+
 	'default' => 'mysql',
 
 	/*
@@ -66,9 +67,9 @@ return array(
 		'pgsql' => array(
 			'driver'   => 'pgsql',
 			'host'     => 'localhost',
-			'database' => 'database',
-			'username' => 'root',
-			'password' => '',
+			'database' => 'clock',
+			'username' => 'cocoa',
+			'password' => 'cocoa',
 			'charset'  => 'utf8',
 			'prefix'   => '',
 			'schema'   => 'public',

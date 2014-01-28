@@ -23,7 +23,9 @@ class EmployeesTableSeeder extends Seeder{
                 'lastname' => 'Juarez',
                 'username' => 'jose123',
                 'password' => sha1('123'),
-                'pay' => '300'
+                'pay' => '300',
+                'created_at' => date('Y-m-d'),
+		'updated_at' => date('Y-m-d')
 	        ));
 
 		 	 DB::table('employees')->insert(array(
@@ -31,7 +33,9 @@ class EmployeesTableSeeder extends Seeder{
                 'lastname' => 'Juarez',
                  'username' => 'julio123',
                 'password' => sha1('123'),
-                'pay' => '300'
+                'pay' => '300',
+		'created_at' => date('Y-m-d'),
+		'updated_at' => date('Y-m-d')
 	        ));
 
 		 	 DB::table('employees')->insert(array(
@@ -39,7 +43,9 @@ class EmployeesTableSeeder extends Seeder{
                 'lastname' => 'Juarez',
                 'username' => 'jimmy123',
                 'password' => sha1('123'),
-                'pay' => '300'
+                'pay' => '300',
+		'created_at' => date('Y-m-d'),
+                'updated_at' => date('Y-m-d') 
 	        ));
 	 
 	        

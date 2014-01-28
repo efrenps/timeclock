@@ -10,28 +10,12 @@
     {{ HTML::style('packages/bootstrap/css/bootstrap.css', array('media' => 'screen')) }}
     {{ HTML::style('css/main.css', array('media' => 'screen')) }}
     {{ HTML::style('packages/clock/css/flipclock.css', array('media' => 'screen')) }}
+
+    {{ HTML::style('css/fancyInput.css') }}
+    {{ HTML::style('css/StyleApp.css') }}
     {{-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries --}}
-    {{-- jquery UI --}}
-    {{ HTML::style('css/jquery-ui.css') }}
-    {{ HTML::script('js/jquery-1.9.1.js') }}
-    {{ HTML::script('js/jquery-ui.js') }}
-    {{ HTML::script('js/app.js') }}
-    <!--[if lt IE 9]>
-        {{ HTML::script('assets/js/html5shiv.js') }}
-        {{ HTML::script('assets/js/respond.min.js') }}
-    <![endif]-->
-    <style>
-      /*table form { margin-bottom: 0; }
-      .error { color: red; font-style: italic; }
-      body { padding-top: 20px; }
-      .ui-autocomplete {z-index: 100;}*/
-    </style>
   </head>
   <body>
-
-     @section('sidebar')
-           
-     @show
 
      <div class="container">
           @yield('content')
@@ -54,7 +38,15 @@
     {{ HTML::script('packages/clock/js/minutecounter.js') }}    
     {{ HTML::script('packages/clock/js/twentyfourhourclock.js') }}
     {{ HTML::script('packages/clock/js/twelvehourclock.js') }} 
-    <!-- COUNTER -->  
-    
+    <!-- COUNTER -->      
+    {{-- jquery UI --}}
+    {{ HTML::style('css/jquery-ui.css') }}
+    {{ HTML::script('js/jquery-1.9.1.js') }}
+    {{ HTML::script('js/jquery-ui.js') }}
+    {{ HTML::script('js/app.js') }}
+    <!--[if lt IE 9]>
+        {{ HTML::script('assets/js/html5shiv.js') }}
+        {{ HTML::script('assets/js/respond.min.js') }}
+    <![endif]-->
   </body>
 </html>
